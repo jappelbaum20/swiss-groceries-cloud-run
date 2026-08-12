@@ -1,15 +1,15 @@
-Copyright (c) 2026 Nick Thommen <nick@thommen.it>
+Swiss Groceries Coop MCP Cloud Run wrapper
+Copyright (C) 2026 Jacob Appelbaum
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, version 3.
 
-Commercial licensing is available for organisations that do not want
-to comply with the AGPL-3.0 terms. See LICENSING.md or contact
-nick@thommen.it for details.
+Upstream dependency attribution:
+@nicktcode/swissgroceries-mcp is Copyright (c) 2026 Nick Thommen and
+is distributed separately under AGPL-3.0-only.
 
 ----
-
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
 
