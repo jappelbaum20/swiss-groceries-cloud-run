@@ -1,0 +1,22 @@
+{
+  "name": "swiss-groceries-cloud-run",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Streamable HTTP wrapper for swissgroceries-mcp on Google Cloud Run",
+  "license": "AGPL-3.0-only",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@nicktcode/swissgroceries-mcp": "0.9.0",
+    "express": "5.1.0",
+    "zod": "3.25.76",
+    "zod-to-json-schema": "3.25.2"
+  }
+}
