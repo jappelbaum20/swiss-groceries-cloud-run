@@ -29,7 +29,7 @@ test('health endpoint reports ready', async () => {
   assert.deepEqual(await response.json(), { status: 'ok' });
 });
 
-test('MCP endpoint exposes exactly the three focused read-only Coop tools', async () => {
+test('MCP endpoint exposes the three legacy Coop tools and shared retailer search', async () => {
   const client = new Client({ name: 'wrapper-test', version: '1.0.0' });
   const transport = new StreamableHTTPClientTransport(new URL(`${baseUrl}/mcp`));
 
@@ -43,6 +43,7 @@ test('MCP endpoint exposes exactly the three focused read-only Coop tools', asyn
         'resolve_ingredient_to_coop_products',
         'get_coop_product',
         'find_current_coop_discounts',
+        'search_retailer_products',
       ],
     );
     for (const tool of result.tools) {

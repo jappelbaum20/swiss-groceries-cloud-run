@@ -1,0 +1,200 @@
+{
+  "tool": "search_retailer_products",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$defs": {
+      "request": {
+        "type": "object",
+        "properties": {
+          "retailer": {
+            "enum": [
+              "coop",
+              "migros"
+            ]
+          },
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          }
+        },
+        "required": [
+          "retailer",
+          "query",
+          "limit"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "retailer": {
+                  "enum": [
+                    "coop",
+                    "migros"
+                  ]
+                },
+                "productId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "detailId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "size": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "priceCHF": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "productUrl": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "retailer",
+                "productId",
+                "detailId",
+                "name",
+                "size",
+                "priceCHF",
+                "productUrl"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "retailer": {
+                  "enum": [
+                    "coop",
+                    "migros"
+                  ]
+                },
+                "code": {
+                  "enum": [
+                    "unavailable",
+                    "timeout",
+                    "rate_limited",
+                    "bad_request"
+                  ]
+                }
+              },
+              "required": [
+                "retailer",
+                "code"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "fetchedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "products",
+          "errors",
+          "fetchedAt"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "examples": [
+    {
+      "products": [
+        {
+          "retailer": "coop",
+          "productId": "3021253",
+          "detailId": "3021253",
+          "name": "Thai Kitchen Kokosnussmilch",
+          "size": "250 ml",
+          "priceCHF": 2.8,
+          "productUrl": "https://www.coop.ch/de/p/3021253"
+        }
+      ],
+      "errors": [],
+      "fetchedAt": "2026-11-20T16:00:00Z"
+    },
+    {
+      "products": [
+        {
+          "retailer": "migros",
+          "productId": "204003200000",
+          "detailId": "100006357",
+          "name": "Vollmilch",
+          "size": "1 l",
+          "priceCHF": 1.9,
+          "productUrl": "https://www.migros.ch/de/product/204003200000"
+        }
+      ],
+      "errors": [],
+      "fetchedAt": "2026-11-20T16:00:00Z"
+    },
+    {
+      "products": [],
+      "errors": [],
+      "fetchedAt": "2026-11-20T16:00:00Z"
+    },
+    {
+      "products": [],
+      "errors": [
+        {
+          "retailer": "migros",
+          "code": "unavailable"
+        }
+      ],
+      "fetchedAt": "2026-11-20T16:00:00Z"
+    }
+  ]
+}
