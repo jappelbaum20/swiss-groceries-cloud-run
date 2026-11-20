@@ -23,11 +23,13 @@ after(async () => {
   });
 });
 
-test('health endpoint reports ready', async () => {
-  const response = await fetch(`${baseUrl}/healthz`);
-  assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { status: 'ok' });
-});
+for (const path of ['/health', '/healthz']) {
+  test(path + ' reports ready', async () => {
+    const response = await fetch(baseUrl + path);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { status: 'ok' });
+  });
+}
 
 test('MCP endpoint exposes the three legacy Coop tools and shared retailer search', async () => {
   const client = new Client({ name: 'wrapper-test', version: '1.0.0' });

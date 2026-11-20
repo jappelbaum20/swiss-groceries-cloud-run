@@ -15,7 +15,7 @@ export function createApp(createMcpServer = createCoopServer) {
     });
   });
 
-  app.get('/healthz', (_request, response) => {
+  app.get(['/health', '/healthz'], (_request, response) => {
     response.json({ status: 'ok' });
   });
 

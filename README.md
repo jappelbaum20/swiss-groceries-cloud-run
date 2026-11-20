@@ -41,7 +41,7 @@ npm test
 npm start
 ```
 
-The health check is at `http://localhost:8080/healthz` and the MCP endpoint is
+The health check is at `http://localhost:8080/health` and the MCP endpoint is
 `http://localhost:8080/mcp`.
 
 ## Deploy to Google Cloud Run
