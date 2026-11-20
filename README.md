@@ -1,4 +1,4 @@
-# Swiss Groceries MCP — Cloud Run
+# Swiss Groceries MCP â€” Cloud Run
 
 A stateless Streamable HTTP service at /mcp with three Coop tools and a
 shared product search for Coop and Migros. The legacy Coop tools use the
@@ -16,14 +16,14 @@ upstream [swissgroceries-mcp package](https://github.com/nicktcode/swissgrocerie
 All tools are annotated as read-only. The upstream retailer endpoints can become unavailable.
 
 `search_retailer_products` searches one retailer per call using `retailer`
-(`coop` or `migros`), `query` (1–120 characters), and `limit` (1–10).
+(`coop` or `migros`), `query` (1â€“120 characters), and `limit` (1â€“10).
 Its MCP text content contains JSON with `products`, `errors`, and an ISO
 `fetchedAt` timestamp. Missing prices are null. A completed search can return
 no matches, a retailer error, or usable matches alongside an error for
 incomplete upstream data. The previous Coop tools keep their original contracts.
 
 Search uses German results. Migros requests use the configured
-`SWISSGROCERIES_MIGROS_REGION_ID` or region `2` (Zürich) by default. Migros
+`SWISSGROCERIES_MIGROS_REGION_ID` or region `2` (ZÃ¼rich) by default. Migros
 `productId` is the public catalogue number and `detailId` is the provider UID.
 The service shares a guest session and a two-minute result cache within each
 process. Each retailer allows four simultaneous lookups and refills the
@@ -58,7 +58,7 @@ https://YOUR-CLOUD-RUN-URL/mcp
 
 The endpoint intentionally uses no authentication because current ChatGPT
 developer-mode MCP connections support OAuth, no authentication, or mixed
-authentication—not arbitrary shared-secret headers. The tools are read-only,
+authenticationâ€”not arbitrary shared-secret headers. The tools are read-only,
 contain no private data, and require no retailer credentials. Cloud Run cost
 controls and monitoring should still be configured because the HTTPS endpoint
 is public.
@@ -66,11 +66,11 @@ is public.
 ## Release identification
 
 For the next rollout, configure the existing Cloud Build Docker step to pass
-`--build-arg SOURCE_SHA=$COMMIT_SHA` and `--build-arg CLOUD_BUILD_ID=$BUILD_ID`.
+`--build-arg COMMIT_SHA=$COMMIT_SHA` and `--build-arg BUILD_ID=$BUILD_ID`.
 The trigger expands these substitutions for each build. Cloud Run supplies
 `K_REVISION` at runtime. After rollout, compare the public `GET /version`
 fields `sourceSha`, `buildId`, and `revision` with the release record.
-Absent or malformed identifiers appear as JSON null.
+Absent or malformed identifiers appear as the string `"unknown"`.
 
 Each valid shared retailer search writes one JSON log entry with the retailer,
 elapsed milliseconds and outcome, including cache hits.

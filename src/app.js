@@ -22,9 +22,9 @@ export function createApp(createMcpServer = createCoopServer) {
   app.get('/version', (_request, response) => {
     const { SOURCE_SHA, CLOUD_BUILD_ID, K_REVISION } = process.env;
     response.set('Cache-Control', 'no-store').json({
-      sourceSha: /^[0-9a-f]{40}$/i.test(SOURCE_SHA ?? '') ? SOURCE_SHA : null,
-      buildId: /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(CLOUD_BUILD_ID ?? '') ? CLOUD_BUILD_ID : null,
-      revision: /^[a-z][a-z0-9-]{0,62}$/.test(K_REVISION ?? '') ? K_REVISION : null,
+      sourceSha: /^[0-9a-f]{40}$/i.test(SOURCE_SHA ?? '') ? SOURCE_SHA : 'unknown',
+      buildId: /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(CLOUD_BUILD_ID ?? '') ? CLOUD_BUILD_ID : 'unknown',
+      revision: /^[a-z][a-z0-9-]{0,62}$/.test(K_REVISION ?? '') ? K_REVISION : 'unknown',
     });
   });
 

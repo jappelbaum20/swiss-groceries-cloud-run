@@ -84,7 +84,7 @@ test('/version exposes only validated release identifiers', async () => {
     process.env.CLOUD_BUILD_ID = 'invalid metadata';
     process.env.K_REVISION = 'invalid/revision';
     assert.deepEqual(await (await fetch(baseUrl + '/version')).json(), {
-      sourceSha: null, buildId: null, revision: null,
+      sourceSha: 'unknown', buildId: 'unknown', revision: 'unknown',
     });
   } finally {
     for (const [key, value] of Object.entries(original)) {
