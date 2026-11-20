@@ -41,7 +41,7 @@ function cooldownMs(retryAfter) {
   return Number.isFinite(absolute) ? Math.max(0, absolute - Date.now()) : DEFAULT_COOLDOWN_MS;
 }
 
-export function createRetailerSearch(registry) {
+export function createRetailerSearch(registry, log = console.log) {
   const states = new Map(['coop', 'migros'].map((retailer) => [retailer, {
     cache: new Map(), pending: new Map(), tokens: MAX_CONCURRENT,
     lastRefill: performance.now(), blockedUntil: 0, deniedUntil: 0,
@@ -101,7 +101,15 @@ export function createRetailerSearch(registry) {
     const parsed = argsSchema.safeParse(args);
     if (!parsed.success) return { isError: true, content: [{ type: 'text', text: '{"error":"bad_request"}' }] };
 
+    const started = performance.now();
     const result = await search({ ...parsed.data, query: parsed.data.query.trim() });
+    const error = result.errors[0];
+    let outcome = result.products.length ? 'ok' : 'empty';
+    if (error) outcome = result.products.length ? 'partial' : error.code;
+    log(JSON.stringify({
+      event: 'retailer_lookup', retailer: parsed.data.retailer,
+      latencyMs: Math.round(performance.now() - started), outcome,
+    }));
     return { content: [{ type: 'text', text: JSON.stringify(result) }] };
   };
 }

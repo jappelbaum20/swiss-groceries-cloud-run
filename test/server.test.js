@@ -23,11 +23,13 @@ after(async () => {
   });
 });
 
-test('health endpoint reports ready', async () => {
-  const response = await fetch(`${baseUrl}/healthz`);
-  assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { status: 'ok' });
-});
+for (const path of ['/health', '/healthz']) {
+  test(path + ' reports ready', async () => {
+    const response = await fetch(baseUrl + path);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { status: 'ok' });
+  });
+}
 
 test('MCP endpoint exposes the three legacy Coop tools and shared retailer search', async () => {
   const client = new Client({ name: 'wrapper-test', version: '1.0.0' });
@@ -61,5 +63,33 @@ test('MCP endpoint rejects unsupported HTTP methods', async () => {
     const response = await fetch(`${baseUrl}/mcp`, { method });
     assert.equal(response.status, 405);
     assert.equal(response.headers.get('allow'), 'POST');
+  }
+});
+
+test('/version exposes only validated release identifiers', async () => {
+  const metadata = {
+    SOURCE_SHA: '1'.repeat(40),
+    CLOUD_BUILD_ID: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+    K_REVISION: 'groceries-00042-abc',
+  };
+  const original = Object.fromEntries(Object.keys(metadata).map(key => [key, process.env[key]]));
+  try {
+    Object.assign(process.env, metadata);
+    const response = await fetch(baseUrl + '/version');
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      sourceSha: metadata.SOURCE_SHA, buildId: metadata.CLOUD_BUILD_ID, revision: metadata.K_REVISION,
+    });
+    delete process.env.SOURCE_SHA;
+    process.env.CLOUD_BUILD_ID = 'invalid metadata';
+    process.env.K_REVISION = 'invalid/revision';
+    assert.deepEqual(await (await fetch(baseUrl + '/version')).json(), {
+      sourceSha: 'unknown', buildId: 'unknown', revision: 'unknown',
+    });
+  } finally {
+    for (const [key, value] of Object.entries(original)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
   }
 });

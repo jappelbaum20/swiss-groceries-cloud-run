@@ -15,8 +15,17 @@ export function createApp(createMcpServer = createCoopServer) {
     });
   });
 
-  app.get('/healthz', (_request, response) => {
+  app.get(['/health', '/healthz'], (_request, response) => {
     response.json({ status: 'ok' });
+  });
+
+  app.get('/version', (_request, response) => {
+    const { SOURCE_SHA, CLOUD_BUILD_ID, K_REVISION } = process.env;
+    response.set('Cache-Control', 'no-store').json({
+      sourceSha: /^[0-9a-f]{40}$/i.test(SOURCE_SHA ?? '') ? SOURCE_SHA : 'unknown',
+      buildId: /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(CLOUD_BUILD_ID ?? '') ? CLOUD_BUILD_ID : 'unknown',
+      revision: /^[a-z][a-z0-9-]{0,62}$/.test(K_REVISION ?? '') ? K_REVISION : 'unknown',
+    });
   });
 
   app.post('/mcp', async (request, response) => {
