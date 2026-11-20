@@ -128,6 +128,22 @@ test('exercises both contract products, the empty result and the upstream failur
   });
 
   const url = await listen(t, createApp(() => createCoopServer(registry, search)));
+  const bare = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' },
+    body: JSON.stringify({
+      jsonrpc: '2.0', id: 1, method: 'tools/call',
+      params: { name: contract.tool, arguments: args('coop', 'Kokosnussmilch') },
+    }),
+  });
+  assert.equal(bare.status, 200);
+  const body = await bare.text();
+  const payload = bare.headers.get('content-type')?.includes('text/event-stream')
+    ? body.split(/\r?\n/).find((line) => line.startsWith('data:')).slice(5)
+    : body;
+  const reply = JSON.parse(payload);
+  assert.equal(reply.id, 1);
+  assertExample(unwrapSearch(reply.result), 0);
   const [one, two] = await Promise.all([connect(t, url), connect(t, url)]);
   const call = (client, input) => client.callTool({ name: contract.tool, arguments: input }).then(unwrapSearch);
   assert.equal(guestCalls, 0);
@@ -283,6 +299,21 @@ test('stops after one 401 retry, never retries a 403, and clears failed guest se
   assertExample(unwrapSearch(await search(args('migros', 'c'))), 3);
   assert.equal(guestCalls, 4);
   assert.equal(productCalls, 3);
+  assertExample(unwrapSearch(await search(args('migros', 'another query'))), 3);
+  assert.equal(guestCalls, 4);
+  assert.equal(productCalls, 3);
+});
+
+test('a denied guest request puts later searches on cooldown', async () => {
+  let calls = 0;
+  const { search } = useFetch(async () => {
+    calls++;
+    return status(403);
+  });
+  for (const query of ['Milch', 'Reis']) {
+    assertExample(unwrapSearch(await search(args('migros', query))), 3);
+  }
+  assert.equal(calls, 1);
 });
 
 test('bounds concurrent calls and respects a sanitized upstream 429 cooldown', async () => {

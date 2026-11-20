@@ -8,7 +8,9 @@ const CACHE_TTL_MS = 120_000;
 const CACHE_SIZE = 128;
 const MAX_CONCURRENT = 4;
 const REFILL_MS = 500;
-const LOOKUP_TIMEOUT_MS = 8_000;
+const LOOKUP_TIMEOUT_MS = 3_500;
+const DENIED_COOLDOWN_MS = 30 * 60_000;
+const MAX_RATE_COOLDOWN_MS = 10 * 60_000;
 const DEFAULT_COOLDOWN_MS = 30_000;
 
 const argsSchema = z.object({
@@ -42,13 +44,14 @@ function cooldownMs(retryAfter) {
 export function createRetailerSearch(registry) {
   const states = new Map(['coop', 'migros'].map((retailer) => [retailer, {
     cache: new Map(), pending: new Map(), tokens: MAX_CONCURRENT,
-    lastRefill: performance.now(), blockedUntil: 0,
+    lastRefill: performance.now(), blockedUntil: 0, deniedUntil: 0,
   }]));
 
   async function search({ retailer, query, limit }) {
     const state = states.get(retailer);
     const key = JSON.stringify([query, limit]);
     const now = performance.now();
+    if (state.deniedUntil > now) return errorResult(retailer, 'unavailable');
     const cached = state.cache.get(key);
     if (cached && cached.expires > now) return cached.result;
     state.cache.delete(key);
@@ -79,8 +82,9 @@ export function createRetailerSearch(registry) {
         return result;
       } catch (error) {
         if (error instanceof RetailerError) {
+          if (error.status === 403) state.deniedUntil = performance.now() + DENIED_COOLDOWN_MS;
           if (error.code === 'rate_limited') {
-            state.blockedUntil = Math.max(state.blockedUntil, performance.now() + cooldownMs(error.retryAfter));
+            state.blockedUntil = Math.max(state.blockedUntil, performance.now() + Math.min(MAX_RATE_COOLDOWN_MS, cooldownMs(error.retryAfter)));
           }
           return errorResult(retailer, error.code);
         }
