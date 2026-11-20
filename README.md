@@ -27,7 +27,7 @@ Search uses German results. Migros requests use the configured
 `productId` is the public catalogue number and `detailId` is the provider UID.
 The service shares a guest session and a two-minute result cache within each
 process. Each retailer allows four simultaneous lookups and refills the
-initial burst of four at two lookups per second. A lookup has an eight-second
+initial burst of four at two lookups per second. A lookup has a 3.5-second
 deadline. This tool uses the public catalogue and guest routes and returns an
 unavailable error if access is denied.
 
