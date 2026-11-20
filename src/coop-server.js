@@ -4,7 +4,8 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { AdapterRegistry } from '@nicktcode/swissgroceries-mcp/dist/adapters/registry.js';
-import { CoopAdapter } from '@nicktcode/swissgroceries-mcp/dist/adapters/coop/index.js';
+import { CoopLookupAdapter, MigrosLookupAdapter } from './retailer-products.js';
+import { createRetailerSearch, retailerSearchTool } from './retailer-search.js';
 import { searchProductsHandler } from '@nicktcode/swissgroceries-mcp/dist/tools/search_products.js';
 import { getProductHandler } from '@nicktcode/swissgroceries-mcp/dist/tools/get_product.js';
 import { getPromotionsHandler } from '@nicktcode/swissgroceries-mcp/dist/tools/get_promotions.js';
@@ -82,7 +83,8 @@ const tools = [
 
 function createRegistry() {
   const registry = new AdapterRegistry();
-  registry.register(new CoopAdapter());
+  registry.register(new CoopLookupAdapter());
+  registry.register(new MigrosLookupAdapter());
   return registry;
 }
 
@@ -203,30 +205,43 @@ async function runTool(registry, name, unparsedArguments) {
   throw new Error(`Unknown tool: ${name}`);
 }
 
-export function createCoopServer(registry = createRegistry()) {
+const sharedRegistry = createRegistry();
+const sharedSearch = createRetailerSearch(sharedRegistry);
+
+export function createCoopServer(
+  registry = sharedRegistry,
+  searchRetailer = registry === sharedRegistry ? sharedSearch : createRetailerSearch(registry),
+) {
   const server = new Server(
     { name: 'swiss-groceries-coop', version: '1.0.0' },
     {
       capabilities: { tools: {} },
       instructions: [
-        'Use this server only for current Coop Switzerland product data.',
+        'Use search_retailer_products for current Swiss grocery products from one retailer, Coop or Migros.',
         'Resolve ingredients with resolve_ingredient_to_coop_products, then use get_coop_product only when more detail is needed.',
         'Use find_current_coop_discounts for current promotions. Treat productNumber as Coop’s product number and coopUrl as the user-facing link.',
-        'All tools are read-only and use unofficial public Coop endpoints, which may occasionally be unavailable.',
+        'All tools are read-only. Retailer endpoints can occasionally be unavailable.',
       ].join(' '),
     },
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: tools.map((tool) => ({
-      name: tool.name,
-      description: tool.description,
-      inputSchema: zodToJsonSchema(tool.schema),
-      annotations: tool.annotations,
-    })),
+    tools: [
+      ...tools.map((tool) => ({
+        name: tool.name,
+        description: tool.description,
+        inputSchema: zodToJsonSchema(tool.schema),
+        annotations: tool.annotations,
+      })),
+      retailerSearchTool,
+    ],
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    if (request.params.name === retailerSearchTool.name) {
+      return searchRetailer(request.params.arguments);
+    }
+
     try {
       const result = await runTool(registry, request.params.name, request.params.arguments);
       return {
