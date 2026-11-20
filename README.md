@@ -63,6 +63,18 @@ contain no private data, and require no retailer credentials. Cloud Run cost
 controls and monitoring should still be configured because the HTTPS endpoint
 is public.
 
+## Release identification
+
+For the next rollout, configure the existing Cloud Build Docker step to pass
+`--build-arg SOURCE_SHA=$COMMIT_SHA` and `--build-arg CLOUD_BUILD_ID=$BUILD_ID`.
+The trigger expands these substitutions for each build. Cloud Run supplies
+`K_REVISION` at runtime. After rollout, compare the public `GET /version`
+fields `sourceSha`, `buildId`, and `revision` with the release record.
+Absent or malformed identifiers appear as JSON null.
+
+Each valid shared retailer search writes one JSON log entry with the retailer,
+elapsed milliseconds and outcome, including cache hits.
+
 ## License and attribution
 
 This wrapper is licensed under AGPL-3.0-only. It depends on and communicates

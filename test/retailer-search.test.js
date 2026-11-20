@@ -403,3 +403,20 @@ test('retains the three legacy input and output contracts over MCP HTTP', async 
     coopUrl: 'https://www.coop.ch/de/search/?text=3021253',
   }]);
 });
+
+test('lookup logs contain only bounded outcome, retailer and duration', async () => {
+  const entries = [];
+  const registry = new Map([
+    ['coop', { lookupProducts: async () => ({ products: [], partial: false }) }],
+    ['migros', { lookupProducts: async () => { throw Error('private upstream detail'); } }],
+  ]);
+  const search = createRetailerSearch(registry, line => entries.push(JSON.parse(line)));
+  await search(args('coop', 'private query'));
+  await search(args('migros', 'private query'));
+  assert.equal(entries.length, 2);
+  for (const [index, [retailer, outcome]] of [['coop', 'empty'], ['migros', 'unavailable']].entries()) {
+    const { latencyMs, ...fields } = entries[index];
+    assert.ok(Number.isInteger(latencyMs) && latencyMs >= 0);
+    assert.deepEqual(fields, { event: 'retailer_lookup', retailer, outcome });
+  }
+});
